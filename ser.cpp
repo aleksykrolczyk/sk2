@@ -1,34 +1,5 @@
 #include "data.h"
-
 using namespace std;
-
-string read_message(int cli_fd){
-    string temp_msg = "";
-    char symbol = 0;
-    while(symbol != END_SYMBOL){
-        read(cli_fd, &symbol, sizeof(char));
-        if (symbol > 20 || symbol < 16) temp_msg += symbol;
-    }
-    return temp_msg.substr(0, temp_msg.size()-1);
-}
-
-void send_message(int fd, char comm, string content){
-    int symbols_sent = 0;
-    int content_size = content.size() + 1;
-    
-    write(fd, &comm, sizeof(char));
-    while(symbols_sent != content_size){
-
-        symbols_sent += write(fd, &content, content_size);
-        cout << symbols_sent << " / " << content_size;
-    }
-
-}
-
-void stop_sending(int fd){
-    write(fd, &END_SYMBOL, sizeof(END_SYMBOL));
-    cout << "... DONE" << endl;
-}
 
 int main() {
 
@@ -65,12 +36,12 @@ int main() {
     int i = 0;
 
     char command;
-    string message, bash_command, line;
+    string message, bash_command, line, temp_str;
 
     while(1) {
         FD_SET(fd, &readFd);
         writeFd = globalFd;
-        timeout.tv_sec = 25;
+        timeout.tv_sec = 300;
         timeout.tv_usec = 0;
 
         cout << "Preselect...\n";
@@ -103,33 +74,40 @@ int main() {
                 message = read_message(cfd);
                 cout << "** " << command << " - " << message << " **\n\n";
 
-                switch( command ){
-                    case CON_INIT:
+                if (command == CON_INIT){ // debugging basically, to be removed at th end?
                         cout << "CON_INIT\n";
-                        cout << cfd << " napisal: " << message << endl;
-                        break;
+                        cout << message << endl;
+                }
 
-                    case CREATE_FILE:
-                        cout << "CREATE_FILE\n";
-                        bash_command = "touch " + message + ".txt";
-                        system(bash_command.c_str() );
-                        break;
+                else if (command == CREATE_FILE){
+                    cout << "CREATE_FILE\n";
+                    bash_command = "touch files/" + message;
+                    system(bash_command.c_str() );
+                }
 
-                    case RECEIVE_FILE:{
-                        cout << "RECEIVE_FILE\n";
-                        ifstream file(message + ".txt");
-                        if(file.is_open()){
-                            while(getline(file, line)){
-                                cout << "Line: " << line << "\n";
-                                send_message(cfd, SEND_LINE, line + '\n');
-                            }
-                            stop_sending(cfd);
+                else if (command == READ_FILE){
+                    cout << "RECEIVE_FILE\n";
+                    ifstream file("files/" + message);
+                    temp_str = "";
+                    if(file.is_open()){
+                        while(getline(file, line)){
+                            temp_str += line + "\n";
                         }
+                        send_message(cfd, SEND_LINE, temp_str);
                     }
+                }
 
-                    default:
-                        cout << "Unkown command: " << command << endl;
-                        break;
+                else if (command == GET_FILE_NAMES){
+                    struct dirent *entry;
+                    DIR *dir = opendir("files");
+                    while((entry = readdir(dir)) != NULL){
+                        cout << entry->d_type << " " << entry->d_name << endl;
+                    }
+                }
+
+                else{
+                    printf("Unknown command %c (msg: %s)", command, message.c_str());
+                    break;
                 }
                 
 

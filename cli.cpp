@@ -1,33 +1,8 @@
 #include "data.h"
-
 using namespace std;
 
-void send_message(int fd, char comm, string content){
-    int symbols_sent = 0;
-    int content_size = content.size() + 1;
-    
-    write(fd, &comm, sizeof(char));
-    while(symbols_sent != content_size){
-
-        symbols_sent += write(fd, &content, content_size);
-        cout << symbols_sent << " / " << content_size;
-    }
-    write(fd, &END_SYMBOL, sizeof(END_SYMBOL));
-    cout << "... DONE" << endl;
-}
-
-string read_message(int cli_fd){
-    string temp_msg = "";
-    char symbol = 0;
-    while(symbol != END_SYMBOL){
-        read(cli_fd, &symbol, sizeof(char));
-        if (symbol > 20 || symbol < 16) temp_msg += symbol;
-    }
-    return temp_msg.substr(0, temp_msg.size()-1);
-}
-
 string msg;
-char command;
+char command, trash;
 
 int main(int argc, char *argv[]) {
     // Setup
@@ -45,9 +20,13 @@ int main(int argc, char *argv[]) {
     connect(fd, (struct sockaddr*) &addr, sizeof(addr));
 
     // Actual program
-    // send_message(fd, CREATE_FILE, "wiadomosc");
-    send_message(fd, RECEIVE_FILE, "wiadomosc");
-    string content = read_message(fd);
+    // send_message(fd, CREATE_FILE, "new_file");
+    // send_message(fd, CON_INIT, "test_file");
+    // send_message(fd, GET_FILE_NAMES, "");
+
+    send_message(fd, READ_FILE, "wiadomosc");
+    read(fd, &trash, sizeof(char)); // reads command (clears this one useless character at the beginning)
+    string content = read_message(fd); // use this only if server is to respond somehow
     cout << content;
 
     close(fd);
