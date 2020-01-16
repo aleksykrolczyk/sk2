@@ -72,9 +72,10 @@ int main() {
                 // Actual program
                 read(cfd, &command, sizeof(char));
                 message = read_message(cfd);
+                temp_str = "";
                 cout << "** " << command << " - " << message << " **\n\n";
 
-                if (command == CON_INIT){ // debugging basically, to be removed at th end?
+                if (command == CON_INIT){ // debugging basically, to be removed at th
                         cout << "CON_INIT\n";
                         cout << message << endl;
                 }
@@ -88,21 +89,24 @@ int main() {
                 else if (command == READ_FILE){
                     cout << "RECEIVE_FILE\n";
                     ifstream file("files/" + message);
-                    temp_str = "";
                     if(file.is_open()){
                         while(getline(file, line)){
                             temp_str += line + "\n";
                         }
-                        send_message(cfd, SEND_LINE, temp_str);
+                        send_message(cfd, SEND_TEXT, temp_str);
                     }
                 }
 
                 else if (command == GET_FILE_NAMES){
                     struct dirent *entry;
                     DIR *dir = opendir("files");
+                    int i = 0;
                     while((entry = readdir(dir)) != NULL){
-                        cout << entry->d_type << " " << entry->d_name << endl;
+                        if(i > 1) temp_str += string(entry->d_name) + ETX;
+                        i += 1;
                     }
+                    cout << temp_str << endl;
+                    send_message(cfd, SEND_TEXT, temp_str);
                 }
 
                 else{

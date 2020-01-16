@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
     // send_message(fd, CON_INIT, "test_file");
     // send_message(fd, GET_FILE_NAMES, "");
 
-    send_message(fd, READ_FILE, "wiadomosc");
+    send_message(fd, GET_FILE_NAMES, "wiadomosc");
     read(fd, &trash, sizeof(char)); // reads command (clears this one useless character at the beginning)
     string content = read_message(fd); // use this only if server is to respond somehow
     cout << content;

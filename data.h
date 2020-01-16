@@ -18,12 +18,13 @@
 #include <sstream>
 
 const char END_SYMBOL = 4;
+const char ETX = 3;
 
 const char CON_INIT = 'a';
 const char CREATE_FILE = 'b';
 const char CON_FIN = 'c';
 const char READ_FILE = 'd';
-const char SEND_LINE = 'e';
+const char SEND_TEXT = 'e';
 const char GET_FILE_NAMES = 'f';
 
 
