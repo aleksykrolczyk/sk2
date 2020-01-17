@@ -78,10 +78,14 @@ int main() {
                     else if (command == GET_FILE_NAMES){
                         struct dirent *entry;
                         DIR *dir = opendir("files");
-                        int j = 0;
+                        int length;
+                        string name;
                         while((entry = readdir(dir)) != NULL){
-                            if(j > 1) temp_str += string(entry->d_name) + ETX;
-                            j += 1;
+                            length = entry->d_namlen;
+                            name = entry->d_name;
+                            if (length == 1 && name[0] == '.') continue;
+                            if (length == 2 && name == "..") continue;
+                            temp_str += name + ETX;
                         }
                         cout << temp_str << endl;
                         send_message(i, SEND_TEXT, temp_str);
