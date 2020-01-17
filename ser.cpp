@@ -25,11 +25,7 @@ int main() {
     FD_ZERO(&active_fd_set);
     FD_SET(fd, &active_fd_set);
 
-    struct timeval timeout;
-    int fd_max = fd;
-    int fda = 0;
     int i = 0;
-
     char command;
     string message, bash_command, line, temp_str;
 

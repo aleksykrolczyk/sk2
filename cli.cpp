@@ -24,21 +24,22 @@ int main(int argc, char *argv[]) {
     // Actual program
 
 
-    send_message(fd, CON_INIT, "proc1");
-    sleep(1);
-    send_message(fd, CON_INIT, "proc1");
+    // send_message(fd, CON_INIT, "proc1");
+    // sleep(1);
+    // send_message(fd, CON_INIT, "proc1");
 
-    // string content;
-    // send_message(fd, GET_FILE_NAMES, "wiadomosc");
-    // read(fd, &trash, sizeof(char)); // reads command (clears this one useless character at the beginning)
-    // content = read_message(fd); // use this only if server is to respond somehow
-    // cout << content;
+    string content;
+    send_message(fd, GET_FILE_NAMES, "aaaa");
+    read(fd, &trash, sizeof(char)); // reads command (clears this one useless character at the beginning)
+    content = read_message(fd); // use this only if server is to respond somehow
+    cout << content;
+    sleep(5);
+    send_message(fd, GET_FILE_NAMES, "aaaaa");
+    read(fd, &trash, sizeof(char)); // reads command (clears this one useless character at the beginning)
+    content = read_message(fd); // use this only if server is to respond somehow
+    cout << content;
 
-    // send_message(fd, GET_FILE_NAMES, "wiadomosc");
-    // read(fd, &trash, sizeof(char)); // reads command (clears this one useless character at the beginning)
-    // content = read_message(fd); // use this only if server is to respond somehow
-    // cout << content;
-
+    send_message(fd, CON_FIN, "");
     close(fd);
     return 0;
 }
