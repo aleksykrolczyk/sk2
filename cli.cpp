@@ -10,6 +10,8 @@ int main(int argc, char *argv[]) {
     struct hostent *host;
 
     int fd = socket(PF_INET, SOCK_STREAM, 0);
+    cout << "-- " << fd <<  " --\n";
+
 
     host = gethostbyname("localhost");
     
@@ -20,14 +22,22 @@ int main(int argc, char *argv[]) {
     connect(fd, (struct sockaddr*) &addr, sizeof(addr));
 
     // Actual program
-    // send_message(fd, CREATE_FILE, "new_file");
-    // send_message(fd, CON_INIT, "test_file");
-    // send_message(fd, GET_FILE_NAMES, "");
 
-    send_message(fd, GET_FILE_NAMES, "wiadomosc");
-    read(fd, &trash, sizeof(char)); // reads command (clears this one useless character at the beginning)
-    string content = read_message(fd); // use this only if server is to respond somehow
-    cout << content;
+
+    send_message(fd, CON_INIT, "proc1");
+    sleep(1);
+    send_message(fd, CON_INIT, "proc1");
+
+    // string content;
+    // send_message(fd, GET_FILE_NAMES, "wiadomosc");
+    // read(fd, &trash, sizeof(char)); // reads command (clears this one useless character at the beginning)
+    // content = read_message(fd); // use this only if server is to respond somehow
+    // cout << content;
+
+    // send_message(fd, GET_FILE_NAMES, "wiadomosc");
+    // read(fd, &trash, sizeof(char)); // reads command (clears this one useless character at the beginning)
+    // content = read_message(fd); // use this only if server is to respond somehow
+    // cout << content;
 
     close(fd);
     return 0;
