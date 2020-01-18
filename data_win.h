@@ -24,20 +24,19 @@ const char SEND_TEXT = 'e';
 const char GET_FILE_NAMES = 'f';
 const char UPDATE_FILE = 'g';
 
-
 using namespace std;
 
 string without_first_and_last_char(string content){
     string text="";
     content = content.substr(1, content.length());
-    for(int z=0;z<content.length();z++)
+    for(unsigned int z=0; z<content.length(); z++)
         if(content[z]!=4&&content[z]!=0) text+=content[z];
     return text;
 }
 
 string without_last_char(string content){
     string text="";
-    for(int z=0;z<content.length();z++)
+    for(unsigned int z=0; z<content.length(); z++)
         if(content[z]!=4&&content[z]!=0) text+=content[z];
     return text;
 }
