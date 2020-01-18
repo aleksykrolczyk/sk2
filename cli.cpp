@@ -15,7 +15,7 @@ using namespace std;
 //Shows him both file stored on computer and server so he can check if he
 //does want to keep some of those changes and not overwrite them
 void save(){
-    string empty;
+    char c='c';
     cout << endl << "This is current version of " << file_name << ".txt, that you want to save: " << endl;
     string current_file_text="";
     string line;
@@ -33,18 +33,29 @@ void save(){
     cout << content;
     file.close();
     
-    cout << endl <<"Make sure that there aren't any changes that you want to overwrite, if you are sure that current version of file is the one you want to save on the server then type anything press enter"<< endl;
     
-    cin >> empty;
-    
-    current_file_text="";
-    ifstream newfile (file_name + ".txt");
-    if(newfile.is_open()){
-        while(getline(newfile, line)) current_file_text += line + "\n";
-    send_message(SSocket, UPDATE_FILE, current_file_text);
-    }
-    newfile.close();
-    cout << endl << "File " << file_name << ".txt has been modified" << endl;
+    //Making sure that the user won't unconsciously overwrite somebody's work
+    //It also gives user the chance to fix mistakes, etc.
+    while(c!='s'&&c!='d'){
+	    cout << endl <<"Make sure that there aren't any changes that you want to overwrite"<< endl;
+	    cout << "If you are sure that current version of file is the one you want to save on the server then type type 's'" << endl;
+	    cout << "If you don't want to make any changes to the server file then press 'd'"<<endl;
+	    
+	    cin >> c;
+	    //if he wants to save changes on server
+	    if(c=='s'){
+		    current_file_text="";
+		    ifstream newfile (file_name + ".txt");
+		    if(newfile.is_open()){
+		        while(getline(newfile, line)) current_file_text += line + "\n";
+		    send_message(SSocket, UPDATE_FILE, current_file_text);
+		    }
+		    newfile.close();
+		    cout << endl << "File " << file_name << ".txt has been modified" << endl;
+		}
+		//if he wants to discard changes
+		if(c=='d') break;
+	}
 }
 
 //Function that counts how many file names are sent by server
@@ -70,6 +81,22 @@ int number_of_files(string content){
     return i;   
 }
 
+//Function that returns current directory
+string ExePath() {
+    char buffer[MAX_PATH];
+    GetModuleFileName( NULL, buffer, MAX_PATH );
+    string::size_type pos = string( buffer ).find_last_of( "\\/" );
+    return string( buffer ).substr( 0, pos);
+}
+
+//Thread handler that is supposed to open a notepad with file chosen by user
+DWORD WINAPI myThread(LPVOID lpParameter)
+{
+	string command_and_directory = "notepad.exe " + ExePath() + "//" +file_name + ".txt";
+	system(command_and_directory.c_str());
+	return 0;
+}
+
 // Basically a console interface to communicate with the user
 void menu(){
     int n=0;
@@ -86,7 +113,8 @@ void menu(){
     string name = "";
     
     
-    //the list of files came in a string so we have to split it up and delete root directury and current directory from a list
+    //the list of files came in a string so we have to split it up
+	// and delete root directury and current directory from a list
     for(char& c : content){
         if(c != ETX) name = name + c;
         else {
@@ -110,7 +138,7 @@ void menu(){
         cout << "1 - Create a new file" << endl;
         cout << "2 - Join to an existing file" << endl;
         cin >> n;
-        //New File
+        //Create New File
         if(n==1) {
             cout << n;
             cout << endl << endl << "Type the name of your file" << endl;
@@ -120,10 +148,10 @@ void menu(){
             send_message(SSocket, CREATE_FILE, file_name);
             //Create File on client
             ofstream outfile (file_name + ".txt");
-            cout << "Open " << file_name << ".txt and start modifying it"<<endl;
-            sleep(10);
+            DWORD myThreadID;
+			HANDLE myHandle = CreateThread(0, 0, myThread, 0, 0, &myThreadID);
         }
-        //Join File
+        //Join Existing File
         else if(n==2){
             int num;
             cout << endl << "Here is the list of existing files, stored on our server. Please insert a corresponing number "<< endl << endl;
@@ -140,10 +168,37 @@ void menu(){
             text = without_first_and_last_char(content);
             outfile << text;
             
-            cout << "Open " << file_name << ".txt and start modifying it"<<endl;
-            sleep(10);
-            
+            DWORD myThreadID;
+			HANDLE myHandle = CreateThread(0, 0, myThread, 0, 0, &myThreadID);
         }
+    }
+    
+    //When the user already does change the file he can save it on the server
+    //User can also open other file to work with, or quit the program
+    while(1){
+        n=0;
+        int i;
+        cout << endl <<"Do you want to send the changes to the server? Remember to first save the file on your computer."<< endl;
+        cout << "1 - Yes, I want to save my progress" <<endl;
+        cout << "2 - No, I want to work with another file" <<endl;
+        cout << "3 - No, I want to quit without saving" <<endl;
+        cin >> n;
+        
+        if(n==1){
+            save();
+            cout << endl <<"What do you want to do next?" <<endl;
+            cout << "1 - Continue working with current file" <<endl;
+            cout << "2 - Choose another file to work with" <<endl;
+            cout << "3 - Quit the program" <<endl;
+            cin >> i;
+            if (i==1){ cout << "Open " << file_name << ".txt and start modifying it"<<endl;
+                sleep(10);
+            }
+            if (i==2) menu();
+            if (i==3) break;
+        }
+        if(n==2) menu();
+        if(n==3) break;
     }
 }
 
@@ -192,38 +247,13 @@ int main(int argc, char *argv[]) {
     memcpy(&stServerAddr.sin_addr.s_addr, lpstServerEnt->h_addr, lpstServerEnt->h_length);
     stServerAddr.sin_port = htons(1234);
 
+	//ctrl+c event handler, makes sure that the connection will be finished and server won't bug
+	SetConsoleCtrlHandler((PHANDLER_ROUTINE) consoleHandler, TRUE); 
+	
     connect(SSocket, (struct sockaddr*) &stServerAddr,  sizeof(struct sockaddr));
     
     menu();   
-            
-    SetConsoleCtrlHandler((PHANDLER_ROUTINE) consoleHandler, TRUE);        
-            
-    
-    while(1){
-        int n=0;
-        int i;
-        cout << endl <<"Do you want to send the changes to the server? Remember to first save the file on your computer."<< endl;
-        cout << "1 - Yes, I want to save my progress" <<endl;
-        cout << "2 - No, I want to work with another file" <<endl;
-        cout << "3 - No, I want to quit without saving" <<endl;
-        cin >> n;
-        
-        if(n==1){
-            save();
-            cout << endl <<"What do you want to do next?" <<endl;
-            cout << "1 - Continue working with current file" <<endl;
-            cout << "2 - Choose another file to work with" <<endl;
-            cout << "3 - Quit the program" <<endl;
-            cin >> i;
-            if (i==1){ cout << "Open " << file_name << ".txt and start modifying it"<<endl;
-                sleep(10);
-            }
-            if (i==2) menu();
-            if (i==3) break;
-        }
-        if(n==2) menu();
-        if(n==3) break;
-    }
+
     outfile.close();
     
     //Send a message that finishes connection

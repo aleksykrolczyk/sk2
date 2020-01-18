@@ -42,11 +42,11 @@ string without_last_char(string content){
     return text;
 }
 
-string read_message(int cli_fd){
+string read_message(SOCKET SSocket){
     string temp_msg = "";
     char symbol = 0;
     while(symbol != END_SYMBOL){
-        recv(cli_fd, &symbol, sizeof(char),0);
+        recv(SSocket, &symbol, sizeof(char),0);
         temp_msg += symbol;
     }
     return temp_msg;
