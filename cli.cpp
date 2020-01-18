@@ -1,8 +1,9 @@
 #include "data.h"
 #include <winsock.h>
 
+//-lws2_32
 
-int fd;
+SOCKET SSocket;
 string msg,file_name;
 char command, trash;
 ofstream outfile;
@@ -10,6 +11,9 @@ int MAX_NAME_SIZE = 20;
 
 using namespace std;
 
+//Handles the saving process when user decides to save his file on server
+//Shows him both file stored on computer and server so he can check if he
+//does want to keep some of those changes and not overwrite them
 void save(){
     string empty;
     cout << endl << "This is current version of " << file_name << ".txt, that you want to save: " << endl;
@@ -23,8 +27,8 @@ void save(){
 
     cout << endl << "And this is current version of " << file_name << ".txt, that is stored on server: " << endl;
     
-    send_message(fd, READ_FILE, file_name);
-    string content = read_message(fd);
+    send_message(SSocket, READ_FILE, file_name);
+    string content = read_message(SSocket);
     content = without_first_and_last_char(content);
     cout << content;
     file.close();
@@ -37,12 +41,14 @@ void save(){
     ifstream newfile (file_name + ".txt");
     if(newfile.is_open()){
         while(getline(newfile, line)) current_file_text += line + "\n";
-    send_message(fd, UPDATE_FILE, current_file_text);
+    send_message(SSocket, UPDATE_FILE, current_file_text);
     }
     newfile.close();
     cout << endl << "File " << file_name << ".txt has been modified" << endl;
 }
 
+//Function that counts how many file names are sent by server
+// excluding root directory and current directory
 int number_of_files(string content){
     int i=0;
     string name = "";
@@ -71,8 +77,8 @@ void menu(){
     int count = 0;
     
     //getting the list of files stored on server
-    send_message(fd, GET_FILE_NAMES, "");
-    string content = read_message(fd);
+    send_message(SSocket, GET_FILE_NAMES, "");
+    string content = read_message(SSocket);
     content = content.substr(1, content.size());
     
     l = number_of_files(content);
@@ -111,7 +117,7 @@ void menu(){
             cin.ignore();
             getline(cin,file_name);
             //Create File on server
-            send_message(fd, CREATE_FILE, file_name);
+            send_message(SSocket, CREATE_FILE, file_name);
             //Create File on client
             ofstream outfile (file_name + ".txt");
             cout << "Open " << file_name << ".txt and start modifying it"<<endl;
@@ -129,8 +135,8 @@ void menu(){
             string text;
             file_name = file_names[num-1];
             ofstream outfile (file_name + ".txt");
-            send_message(fd, READ_FILE, file_name);
-            string content = read_message(fd);
+            send_message(SSocket, READ_FILE, file_name);
+            string content = read_message(SSocket);
             text = without_first_and_last_char(content);
             outfile << text;
             
@@ -141,12 +147,16 @@ void menu(){
     }
 }
 
+//Function for handling ctrl+c event in console, so that the connection will be finished and server won't bug
 bool consoleHandler(int signal) {
 
     if (signal == CTRL_C_EVENT) {
 		outfile.close();
-    	send_message(fd, CON_FIN, "");
-    	close(fd);	
+    	send_message(SSocket, CON_FIN, "");
+        closesocket(SSocket);
+
+	    /* terminate use of the winsock */
+        WSACleanup();
         exit(0);
     }
     return true;
@@ -155,7 +165,7 @@ bool consoleHandler(int signal) {
     
 int main(int argc, char *argv[]) {
     // Setup
-    SOCKET SSocket;
+    
     WSADATA WData;
     WORD WRequiredVersion;
     struct sockaddr_in stServerAddr;
@@ -188,7 +198,7 @@ int main(int argc, char *argv[]) {
             
     SetConsoleCtrlHandler((PHANDLER_ROUTINE) consoleHandler, TRUE);        
             
-            
+    
     while(1){
         int n=0;
         int i;
@@ -217,7 +227,7 @@ int main(int argc, char *argv[]) {
     outfile.close();
     
     //Send a message that finishes connection
-    send_message(fd, CON_FIN, "");
+    send_message(SSocket, CON_FIN, "");
     closesocket(SSocket);
 
 	/* terminate use of the winsock */

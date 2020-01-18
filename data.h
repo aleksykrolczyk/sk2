@@ -52,7 +52,7 @@ string read_message(int cli_fd){
     return temp_msg;
 }
 
-void send_message(int fd, char comm, string content){
+void send_message(SOCKET SSocket, char comm, string content){
     int symbols_sent = 0;
     int size = content.length() + 1;
     
@@ -60,13 +60,13 @@ void send_message(int fd, char comm, string content){
     
     strcpy(msg, content.c_str());
     
-    send(fd, &comm, sizeof(char),0);
+    send(SSocket, &comm, sizeof(char),0);
     while(symbols_sent != size){
-        symbols_sent += write(fd, msg, size);
+        symbols_sent += send(SSocket, msg, size,0);
         cout << symbols_sent << " / " << size;
     }
     
-    send(fd, &END_SYMBOL, sizeof(END_SYMBOL),0);
+    send(SSocket, &END_SYMBOL, sizeof(END_SYMBOL),0);
 
     delete[] msg;
     cout << "... DONE" << endl;
