@@ -1,5 +1,8 @@
-#include "data.h"
+#include "data_win.h"
 #include <winsock.h>
+
+#define PORT 1234
+#define SERVER "192.168.18.8"
 
 //-lws2_32
 
@@ -133,7 +136,7 @@ void menu(){
     }
     
     
-    while(n!=1&&n!=2){
+    while(n!=1 && n!=2){
         cout << "Welcome, do you want to create a new file or join to an existing one? Type in a number: " << endl << endl;
         cout << "1 - Create a new file" << endl;
         cout << "2 - Join to an existing file" << endl;
@@ -149,7 +152,7 @@ void menu(){
             //Create File on client
             ofstream outfile (file_name + ".txt");
             DWORD myThreadID;
-			HANDLE myHandle = CreateThread(0, 0, myThread, 0, 0, &myThreadID);
+			CreateThread(0, 0, myThread, 0, 0, &myThreadID);
         }
         //Join Existing File
         else if(n==2){
@@ -169,7 +172,7 @@ void menu(){
             outfile << text;
             
             DWORD myThreadID;
-			HANDLE myHandle = CreateThread(0, 0, myThread, 0, 0, &myThreadID);
+			CreateThread(0, 0, myThread, 0, 0, &myThreadID);
         }
     }
     
@@ -234,7 +237,7 @@ int main(int argc, char *argv[]) {
     }
 	
 	/* look up server's IP address */
-    lpstServerEnt = gethostbyname("localhost");
+    lpstServerEnt = gethostbyname(SERVER);
     if (! lpstServerEnt){
         fprintf(stderr, "%s: Can't get the server's IP address.\n", argv[0]);
         exit(1);
@@ -245,7 +248,7 @@ int main(int argc, char *argv[]) {
     memset(&stServerAddr, 0, sizeof(struct sockaddr));
     stServerAddr.sin_family = AF_INET;
     memcpy(&stServerAddr.sin_addr.s_addr, lpstServerEnt->h_addr, lpstServerEnt->h_length);
-    stServerAddr.sin_port = htons(1234);
+    stServerAddr.sin_port = htons(PORT);
 
 	//ctrl+c event handler, makes sure that the connection will be finished and server won't bug
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE) consoleHandler, TRUE); 
