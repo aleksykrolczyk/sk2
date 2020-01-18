@@ -1,2 +1,7 @@
 .vscode
 extra/*
+cli
+ser
+*workspace
+test.cpp
+test
