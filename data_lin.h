@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <iostream>
 #include <sys/types.h>
-#include <winsock.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
 #include <unistd.h>
 #include <stdio.h>
@@ -42,32 +45,29 @@ string without_last_char(string content){
     return text;
 }
 
-string read_message(SOCKET SSocket){
+string read_message(int fd){
     string temp_msg = "";
     char symbol = 0;
     while(symbol != END_SYMBOL){
-        recv(SSocket, &symbol, sizeof(char),0);
+        read(fd, &symbol, sizeof(char));
         temp_msg += symbol;
     }
     return temp_msg;
 }
 
-void send_message(SOCKET SSocket, char comm, string content){
+void send_message(int fd, char comm, string content){
     int symbols_sent = 0;
     int size = content.length() + 1;
     
     char * msg = new char[size];
-    
     strcpy(msg, content.c_str());
     
-    send(SSocket, &comm, sizeof(char),0);
+    write(fd, &comm, sizeof(char));
     while(symbols_sent != size){
-        symbols_sent += send(SSocket, msg, size,0);
-        cout << symbols_sent << " / " << size;
+        symbols_sent += write(fd, msg, size);
     }
     
-    send(SSocket, &END_SYMBOL, sizeof(END_SYMBOL),0);
+    write(fd, &END_SYMBOL, sizeof(END_SYMBOL));
 
     delete[] msg;
-    cout << "... DONE" << endl;
 }
