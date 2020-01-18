@@ -27,18 +27,19 @@ void save(){
     string content = read_message(fd);
     content = without_first_and_last_char(content);
     cout << content;
+    file.close();
     
     cout << endl <<"Make sure that there aren't any changes that you want to overwrite, if you are sure that current version of file is the one you want to save on the server then type anything press enter"<< endl;
     
     cin >> empty;
     
     current_file_text="";
-    //ifstream file (file_name + ".txt");
-    if(file.is_open()){
-        while(getline(file, line)) current_file_text += line + "\n";
+    ifstream newfile (file_name + ".txt");
+    if(newfile.is_open()){
+        while(getline(newfile, line)) current_file_text += line + "\n";
     send_message(fd, UPDATE_FILE, current_file_text);
     }
-    file.close();
+    newfile.close();
     cout << endl << "File " << file_name << ".txt has been modified" << endl;
 }
 
