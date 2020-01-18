@@ -26,15 +26,26 @@ const char CON_FIN = 'c';
 const char READ_FILE = 'd';
 const char SEND_TEXT = 'e';
 const char GET_FILE_NAMES = 'f';
+const char UPDATE_FILE = 'g';
 
 
 // Not a good practice but whatever
 
 using namespace std;
 
-string without_last_char(string input){
-    // not used right know, might be handy someday
-    return input.substr(0, input.size()-1);
+string without_first_and_last_char(string content){
+    string text="";
+    content = content.substr(1, content.length());
+    for(int z=0;z<content.length();z++)
+        if(content[z]!=4&&content[z]!=0) text+=content[z];
+    return text;
+}
+
+string without_last_char(string content){
+    string text="";
+    for(int z=0;z<content.length();z++)
+        if(content[z]!=4&&content[z]!=0) text+=content[z];
+    return text;
 }
 
 string read_message(int cli_fd){
@@ -50,15 +61,17 @@ string read_message(int cli_fd){
 void send_message(int fd, char comm, string content){
     int symbols_sent = 0;
     int size = content.length() + 1;
+    
     char * msg = new char[size];
+    
     strcpy(msg, content.c_str());
-
+    
     write(fd, &comm, sizeof(char));
     while(symbols_sent != size){
         symbols_sent += write(fd, msg, size);
         cout << symbols_sent << " / " << size;
-
     }
+    
     write(fd, &END_SYMBOL, sizeof(END_SYMBOL));
 
     delete[] msg;
