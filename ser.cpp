@@ -82,7 +82,7 @@ int main() {
                     
                     else if (command == UPDATE_FILE){ // updates file's content
                         ofstream file ("files/" + current_file);
-                        message = without_first_and_last_char(message);
+                        message = without_last_char(message);
                         cout << message;
                         file << message;
                         file.close();
