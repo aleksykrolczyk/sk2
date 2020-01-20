@@ -14,51 +14,73 @@ int MAX_NAME_SIZE = 20;
 
 using namespace std;
 
+boolean check_if_save_is_possible(string file_name){
+    send_message(SSocket, BLOCK_FILE, file_name);
+    char response;
+    recv(SSocket, &response, sizeof(char), 0);
+
+    if (response == SAVE_POSSIBLE) return true;
+    if (response == SAVE_NOT_POSSIBLE) return false;
+
+    cout << "Something went wrong :(..\n";
+}
+
 //Handles the saving process when user decides to save his file on server
 //Shows him both file stored on computer and server so he can check if he
 //does want to keep some of those changes and not overwrite them
 void save(){
-    char c='c';
-    cout << endl << "This is current version of " << file_name << ".txt, that you want to save: " << endl;
-    string current_file_text="";
-    string line;
-    ifstream file(file_name+".txt");
-    if(file.is_open()){
-        while(getline(file, line)) current_file_text += line + "\n";
-        cout << current_file_text << endl ;
-    }
 
-    cout << endl << "And this is current version of " << file_name << ".txt, that is stored on server: " << endl;
+    if (!save_is_possible(file_name)){
+        char c;
+        cout << "Someone else is saving right now, please try in a second.\n";
+        cout << "Type 's' and press enter to try again or 'd' if you want to discard changes.\n";
+        cin >> c;
+        if (c=='s') save();
+        if (c=='d') return;
+    }
+    else{
+        char c='c';
+        cout << endl << "This is current version of " << file_name << ".txt, that you want to save: " << endl;
+        string current_file_text="";
+        string line;
+        ifstream file(file_name+".txt");
+        if(file.is_open()){
+            while(getline(file, line)) current_file_text += line + "\n";
+            cout << current_file_text << endl ;
+        }
+
+        cout << endl << "And this is current version of " << file_name << ".txt, that is stored on server: " << endl;
+        
+        send_message(SSocket, READ_FILE, file_name);
+        string content = read_message(SSocket);
+        content = without_first_and_last_char(content);
+        cout << content;
+        file.close();
     
-    send_message(SSocket, READ_FILE, file_name);
-    string content = read_message(SSocket);
-    content = without_first_and_last_char(content);
-    cout << content;
-    file.close();
     
-    
-    //Making sure that the user won't unconsciously overwrite somebody's work
-    //It also gives user the chance to fix mistakes, etc.
-    while(c!='s'&&c!='d'){
-	    cout << endl <<"Make sure that there aren't any changes that you want to overwrite"<< endl;
-	    cout << "If you are sure that current version of file is the one you want to save on the server then type type 's'" << endl;
-	    cout << "If you don't want to make any changes to the server file then press 'd'"<<endl;
-	    
-	    cin >> c;
-	    //if he wants to save changes on server
-	    if(c=='s'){
-		    current_file_text="";
-		    ifstream newfile (file_name + ".txt");
-		    if(newfile.is_open()){
-		        while(getline(newfile, line)) current_file_text += line + "\n";
-		    send_message(SSocket, UPDATE_FILE, current_file_text);
-		    }
-		    newfile.close();
-		    cout << endl << "File " << file_name << ".txt has been modified" << endl;
-		}
-		//if he wants to discard changes
-		if(c=='d') break;
-	}
+        //Making sure that the user won't unconsciously overwrite somebody's work
+        //It also gives user the chance to fix mistakes, etc.
+        while(c!='s'&&c!='d'){
+            cout << endl <<"Make sure that there aren't any changes that you want to overwrite"<< endl;
+            cout << "If you are sure that current version of file is the one you want to save on the server then type type 's'" << endl;
+            cout << "If you don't want to make any changes to the server file then press 'd'"<<endl;
+            
+            cin >> c;
+            //if he wants to save changes on server
+            if(c=='s'){
+                current_file_text="";
+                ifstream newfile (file_name + ".txt");
+                if(newfile.is_open()){
+                    while(getline(newfile, line)) current_file_text += line + "\n";
+                send_message(SSocket, UPDATE_FILE, file_name + ETX + current_file_text);
+                }
+                newfile.close();
+                cout << endl << "File " << file_name << ".txt has been modified" << endl;
+            }
+            //if he wants to discard changes
+            if(c=='d') return;
+        }
+    }
 }
 
 //Function that counts how many file names are sent by server

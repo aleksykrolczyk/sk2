@@ -26,6 +26,10 @@ const char READ_FILE = 'd';
 const char SEND_TEXT = 'e';
 const char GET_FILE_NAMES = 'f';
 const char UPDATE_FILE = 'g';
+const char BLOCK_FILE = 'h';
+
+const char SAVE_POSSIBLE = 'y';
+const char SAVE_NOT_POSSIBLE = 'n';
 
 
 using namespace std;
