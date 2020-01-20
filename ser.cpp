@@ -54,7 +54,7 @@ int main() {
                     FD_SET(new_sock, &active_fd_set);
                 }
                 else{
-                
+
                     // Serving client(s)
                     read(i, &command, sizeof(char));
                     message = read_message(i);
@@ -114,8 +114,16 @@ int main() {
                         }
                     
                     else if (command == CON_FIN){ // ends the connection
+                            map<string, int> ::iterator it;
+                            for(it = blocked_files.begin(); it != blocked_files.end(); it++){
+                                if (it->second == i){
+                                    it->second = 0;
+                                    break;
+                                }
+                            }
                             close(i);
                             FD_CLR(i, &active_fd_set);
+
                         }
                     
                     else if (command == BLOCK_FILE){
