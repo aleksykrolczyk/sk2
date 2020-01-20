@@ -3,8 +3,6 @@ using namespace std;
 
 #define PORT 1234
 
-string current_file;
-
 int main() {
 
     // Setup
@@ -61,14 +59,12 @@ int main() {
 
                     if (command == CREATE_FILE){ // Creates new file in 'files/' directory
                         message = without_last_char(message);
-                        current_file = message;
                         bash_command = "touch files/" + message;
                         system(bash_command.c_str());
                     }
 
                     else if (command == READ_FILE){ // returns file content to the client
                         message = without_last_char(message);
-                        current_file = message;
                         ifstream file("files/" + message);
                         if(file.is_open()){
                             while(getline(file, line)){
@@ -81,10 +77,25 @@ int main() {
                     
                     
                     else if (command == UPDATE_FILE){ // updates file's content
-                        ofstream file ("files/" + current_file);
+                        string file_name = "";
+                        string content = "";
+                        int is_file_name = 1;
+
+                        for(char& c : without_last_char(message)){
+                            if (c == ETX){
+                                is_file_name = 0;
+                                continue;
+                            }
+                            if (is_file_name) file_name += c;
+                            if (!is_file_name) content += c;
+                        }
+
+                        printf("File_name: %s\nContent: %s\n", file_name.c_str(), content.c_str());
+
+                        ofstream file ("files/" + file_name);
                         message = without_last_char(message);
                         cout << message;
-                        file << message;
+                        file << content;
                         file.close();
                     }
 
