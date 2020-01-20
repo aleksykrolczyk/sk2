@@ -51,7 +51,7 @@ void save(){
 		    ifstream newfile (file_name + ".txt");
 		    if(newfile.is_open()){
 		        while(getline(newfile, line)) current_file_text += line + "\n";
-		    send_message(SSocket, UPDATE_FILE, current_file_text);
+		    send_message(SSocket, UPDATE_FILE, file_name + ETX + current_file_text);
 		    }
 		    newfile.close();
 		    cout << endl << "File " << file_name << ".txt has been modified" << endl;
